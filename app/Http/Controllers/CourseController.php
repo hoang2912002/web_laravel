@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class CourseController extends Controller
 {
@@ -17,24 +18,52 @@ class CourseController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index()
     {
-        $search = $request->get('q');
-        $data = Course::where('name','LIKE','%' . $search . '%')->paginate(3);
-        $data->appends(['q' => $search]);
-        //appends tức là khi mình search 1 từ nào đó thì $request nó sẽ truyền q lấy giá trị đó ra 
-        //nhưng mà vấn đề là khi mình giả sử mik tìm kiếm 'Bút' nó hiện ra 3 pages tất cả 
-        // nhưng mà khi mik nhấn next thì page sẽ nhảy sang trang tiếp theo nma nó mất đi q ở trên thanh địa chỉ nên
-        // $request mặc định lấy gtri của q là null 
-        // vì v dùng appends để nó thêm giá trị của q vào attribute $search
-        return view('course.index',[
-            'data' =>$data,
-            'search' => $search,
+        // $search = $request->get('q');
+        // $data = Course::where('name','LIKE','%' . $search . '%')->paginate(3);
+        // $data->appends(['q' => $search]);
+        // //appends tức là khi mình search 1 từ nào đó thì $request nó sẽ truyền q lấy giá trị đó ra 
+        // //nhưng mà vấn đề là khi mình giả sử mik tìm kiếm 'Bút' nó hiện ra 3 pages tất cả 
+        // // nhưng mà khi mik nhấn next thì page sẽ nhảy sang trang tiếp theo nma nó mất đi q ở trên thanh địa chỉ nên
+        // // $request mặc định lấy gtri của q là null 
+        // // vì v dùng appends để nó thêm giá trị của q vào attribute $search
+        // return view('course.index',[
+        //     'data' =>$data,
+        //     'search' => $search,
             
-        ]);
+        // ]);
+        return view('course.index');
         
     } 
-
+    public function api()
+    {
+        return DataTables::of(Course::query())
+            ->editColumn('created_at', function ($object) {
+                return $object->year_created_at;
+            })
+            #ở addColumn có 2 cách
+#-------------------Cách 1 là trả về dữ liệu thô vì trong api k có html nên là phải trả dữ liệu về dạng json
+            
+        //     ->addColumn('edit', function ($object) {
+        //         $link = route('courses.edit',$object);
+        //         return "<a class='btn btn-primary' href='$link'>Edit</a>";
+        //     })
+        // ->rawColumns(['edit'])
+#-------------------Cách 2 là trả theo dạng html luôn  nhưng mà ở bên fontend nó sẽ k rework lại thành html cho mik mà nó sẽ print ra code luôn
+            #  vì thằng backend đã mã hóa nó thành k phải là html để tăng tính bảo mật 
+            ->addColumn('edit',function($object){
+                return route('courses.edit',$object);
+            })
+            ->addColumn('destroy',function($object){
+                return route('courses.destroy',$object);
+            })
+            
+        ->make(true);
+        #Api đó là khi mik gọi đến 1 đường link sẽ trả về cho mik dữ liệu
+        #Hoặc khi mình đẩy dữ liệu lên 1 đường link thì nó sẽ trả về dữ liệu or notice sucess
+        # make(true) để render ra view
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -142,7 +171,10 @@ class CourseController extends Controller
         // Course::destroy($course->id);
         //or Course::where('id',$course->id)->delete();
         //Đây là cách viết Query builder tứ là nó sẽ tự sinh ra câu SQL theo kiểu gọi đến hàm 
-        return redirect()->route('courses.index');
+        $array = [];
+        $array['status'] = true;
+        $array['message'] = '';
+        return response($array,200);
 
 
     }
