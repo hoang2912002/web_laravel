@@ -8,9 +8,12 @@ use App\Http\Requests\Course\UpdateRequest;
 use App\Models\Course;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Yajra\DataTables\DataTables;
-
+use Illuminate\Support\Facades\View;
+use Illuminate\Database\Eloquent\Builder;
 class CourseController extends Controller
 {
     /**
@@ -18,6 +21,27 @@ class CourseController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+
+#---Gỉa xử muốn hiển thị lên web mọi trang đề có title là Course ở đằng đầu 
+    #thì có 1 khái niệm khi mà chạy cái class CourseContrller thì nó sẽ ưu tiên chạy 
+#---thằng đó đầu tiên nó là __Contruct() : là khởi tạo
+    
+    private Model $model;
+
+    public function __construct()
+    {
+        ($this->model = new Course())->query(); 
+        $routeName = Route::currentRouteName();
+        $arr = explode('.' , $routeName);
+        $arr = array_map('ucfirst', $arr);
+        $title = implode('-',$arr);
+        
+        View::share('title', $title);
+        //Có nghĩa là với mọi view  nó sẽ luôn mặc định truyền trước 1 cái biến 
+        // đến mọi cái mà mình return lại view ở đây 
+    }
+
     public function index()
     {
         // $search = $request->get('q');
@@ -38,7 +62,25 @@ class CourseController extends Controller
     } 
     public function api()
     {
-        return DataTables::of(Course::query())
+        #----CÁCH 1 LÀM THỦ CÔNG ĐỔ DỮ LIỆU RA K DÙNG ĐẾN THƯ VIỆN
+
+        // $data = $this->model->paginate(1,['*'], 'page' , $request->get('draw'));
+
+        // $arr = [];
+        // $arr['data'] =  [];
+        // foreach($data->items() as $item){
+        //     $item->setAppends(['year_created_at']);
+        //     $item->edit = route('courses.edit',$item);
+        //     $item->destroy = route('courses.destroy',$item);
+        //     $arr['data'][]= $item;
+        // }
+        // $arr['draw'] = $data->currentPage();
+        // $arr['recordsTotal'] = $data->total();
+        // $arr['recordsFiltered']= $data->total();
+        // return $arr;
+
+        #-----CÁCH 2 DÙNG THƯ VIỆN
+        return DataTables::of($this->model::query())
             ->editColumn('created_at', function ($object) {
                 return $object->year_created_at;
             })
@@ -64,6 +106,16 @@ class CourseController extends Controller
         #Hoặc khi mình đẩy dữ liệu lên 1 đường link thì nó sẽ trả về dữ liệu or notice sucess
         # make(true) để render ra view
     }
+
+    public function apiName(Request $request)
+    {
+        return $this->model
+        ->where( 'name' , 'like' ,'%' . $request -> get('q'). '%')
+        ->get([
+            'id',
+            'name',
+        ]);
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -83,7 +135,7 @@ class CourseController extends Controller
     public function store(StoreRequest $request)
     {
         
-        $object = new Course();
+        $object = new $this->model;
         $object->fill($request->validated());
         //validated tức là là sẽ lấy những thằng đã đc khai báo ở trong Request
 
@@ -135,7 +187,7 @@ class CourseController extends Controller
      * @param  \App\Models\Course  $course
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateRequest $request, Course $course)
+    public function update(UpdateRequest $request, $courseID)
     {
         //Cách 1 k biến thằng $course thành đối tương(Query builder)
         // Course::query()->where('id',$course->id)->update(
@@ -143,11 +195,9 @@ class CourseController extends Controller
         //         '_token',
         //         '_method',
         //     ));
-        $course->update(
-            $request->except(
-                '_token',
-                '_method',
-            ));
+        $object = $this->model->find($courseID);
+        $object->update(
+            $request->validated());
             return redirect()->route('courses.index');
 
         //Viết theo kiểu OOP Elequen
@@ -162,11 +212,13 @@ class CourseController extends Controller
      * @param  \App\Models\Course  $course
      * @return \Illuminate\Http\Response
      */
-    public function destroy(DestroyRequest $request, Course $course)
+    public function destroy(DestroyRequest $request,  Course $course)
     {
         //Cách 1 Course $course ở đây tức là laravel đã ép kiểu cho mình thành 1 đối tượng 
         //cách này sẽ tiện hơn vì laravel sẽ valid cho mình là thằng này có exist hay k r nó sẽ báo lối lại
+        
         $course->delete();
+        //$this->model->where('id', $course)->delete($course->id);
         //Cách 2:
         // Course::destroy($course->id);
         //or Course::where('id',$course->id)->delete();
@@ -175,8 +227,6 @@ class CourseController extends Controller
         $array['status'] = true;
         $array['message'] = '';
         return response($array,200);
-
-
     }
 }
 
