@@ -20,8 +20,15 @@ class Course extends Model
     //     'created_at',
     //     'updated_at',
     // ];
+
     public function getYearCreatedAtAttribute()
     {
         return date_format(date_create($this->created_at),'Y');
     }
+
+    public function students()
+    {
+        return $this->hasMany(Student::class,'course_id', 'id');
+    }
+    
 }

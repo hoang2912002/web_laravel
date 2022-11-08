@@ -36,6 +36,25 @@
                           </div>
                       </div>
                       <div class="row">
+
+                            @if ($errors->any())
+                              <div class="col-12">
+                                  <div class="alert alert-danger">
+                                      <ul>
+                                          @foreach ($errors->all() as $error)
+                                              <li>{{ $error }}</li>
+                                          @endforeach
+                                      </ul>
+                                  </div>
+                              </div> 
+                          @endif
+                          @if(session()->has('success'))
+                              <div class="col-12">
+                                <div class="alert alert-success" role="alert">
+                                    {{session()->get('success')}}
+                                </div>
+                              </div>
+                          @endif 
                           <div class="col-12">
                               @yield('content')
                               <!--yield ở đây là tống hết nội dung vô và gọi đến nó-->

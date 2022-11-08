@@ -9,38 +9,48 @@ và dùng hàm extends()
 @endpush
 @section('content')
     <div class="card">
-        @if ($errors->any())
-            <div class="card-header">
-                <div class="alert alert-danger">
-                    <ul>
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div> 
-        @endif
-        
         <div class="card-body">
-            <a class="btn btn-success" href="{{route('courses.create')}}">Thêm</a>
+            <a class="btn btn-success" href="{{route('students.create')}}">Thêm</a>
             <div class="form-group">
-                <select name="" id="select-name">
-
+                <select name="" id="select-course-name">
+                </select>
+            </div>
+            <div class="form-group">
+                <select name="" id="select-status-name" class="form-control">
+                    <option value="0">Tất cả</option>
+                    @foreach ($arrstudentStatus as $option => $value)
+                        <option value="{{$value}}">
+                            {{$option}}
+                        </option>
+                    @endforeach
                 </select>
             </div>
             {{-- <form action="" class="float-right form-group form-inline">
                 <label class="mr-2" for="">Search: </label>
                 <input type="search" name="q" id="" value="{{$search}}" class="form-control">
             </form> --}}
+            @php
+                // $comments = App\Models\Student::find(1)->comments;
+ 
+                // foreach ($comments as $comment) {
+                //     echo $comment->get('course.name');
+                // }
+                
+                
+            @endphp
             <table class="table table-centered mb-0" id="table-index">
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>Name</th>
-                        <th>Number Student</th>
-                        <th>Create At</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Avatar</th>
                         <td>Edit</td>
                         <th>Delete</th>
+                        
                     </tr>
                 </thead>      
             </table>
@@ -54,7 +64,7 @@ và dùng hàm extends()
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(function() {
-            $("#select-name").select2({
+            $("#select-course-name").select2({
                 ajax: {
                     url: '{{route("courses.api.name")}}',
                     dataType: 'json',
@@ -78,13 +88,10 @@ và dùng hàm extends()
                     //cache: true
                 },
                 placeholder: 'Search for a name',
+                allowClear: true
                 
             });
-            
-           
 
-            
-            
             var buttonCommon = {
                 exportOptions: {
                     columns: ':visible :not(.not-export)',
@@ -92,7 +99,7 @@ và dùng hàm extends()
             };
             let table = $('#table-index').DataTable({
                 
-                dom: 'Blrtip', 
+                dom: 'Blfrtip', 
                 select: true,
                 buttons: [ 
                     $.extend( true, {}, buttonCommon, {
@@ -112,18 +119,37 @@ và dùng hàm extends()
                     } ),
                     'colvis'
                 ],
+                lengthMenu: [ 10, 25, 50, 75, 100 ],
                 columnDefs: [ {
                     className: "not-export", targets: 3
                 } ],
                 processing: true,
                 serverSide: true,
-                ajax: '{!! route('courses.api') !!}',
+                ajax: '{!! route('students.api') !!}',
                 columns: [
                     { data: 'id', name: 'id' },
                     { data: 'name', name: 'name' },
-                    { data: 'students_count', name: 'name' },
-                    { data: 'created_at', name: 'created_at' },
+                    { data: 'age', name: 'age' },
+                    { data: 'gendername', name: 'gendername' },
+                    { data: 'course_name', name: 'course_name' },
+                    { data: 'status', name: 'status' },
+                    
+                
                     //{ data: 'year_created_at', name: 'created_at' },
+                    { 
+                        data: 'avatar',
+                        targets: 3,
+                        orderable: false,
+                        searchable: false, 
+                        render: function ( data) {
+                            if(!data){
+                                return '' ;
+                            }
+                            return `<img src=" {{ public_path() }} / ${data}">`;
+                            //cái này nó có 1 bất lợi là nó trỏ thẳng vào ỏ C của mình nên là phải 
+                            //public lên server/ hosting thì mới xem đc
+                        }
+                    },
                     { 
                         data: 'edit',
                         targets: 3,
@@ -146,14 +172,30 @@ và dùng hàm extends()
                     },
                 ]
             });
-
-            $('#select-name').change( function () {
-                table.columns( 0 ).search( this.value ).draw();
+            
+            $('#select-course-name').change( function () {
+                table.columns( 4 ).search( $(this).val() ).draw();
             } );
-            /**
-                có nghĩ là cứ trong document mà có xuất hiện click của class ".btn-delete" thì nó sẽ bắt 
-                sự kiện
-            **/   
+
+            $('#select-status-name').change( function () {
+                let value = $(this).val();
+                //Vấn đề mik gặp tiếp ở đây là nếu m chooseback lại option tất cả thì
+                //nó sẽ k có gtri để trả về vì $value của nó k có
+                //có 2 cách xử lý:
+                //Front end là mik kiểm tra nếu như select vào option Tất cả thì mik sẽ 
+                //xóa cái $(this).val() để nó draw() ra tất cả 
+                //Note toàn bộ input truyền vào nó sẽ là chuỗi k phải số
+                // let value = $(this).val();
+                // if(value === '0' ){
+                //     table.columns( 5 ).search( '' ).draw();
+                // }
+                // else
+                //     table.columns( 5 ).search(value).draw();
+                //Back end thì qa file controller
+                table.columns( 5 ).search(value).draw();
+                
+            } );
+
             $(document).on('click','.btn-delete',function(){
                 let form = $(this).parents('form');
                 $.ajax({
@@ -170,7 +212,6 @@ và dùng hàm extends()
                         console.log('error');
                     }
                 });
-                
                 
             });
         });

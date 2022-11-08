@@ -14,7 +14,9 @@ class CourseFactory extends Factory
     public function definition()
     {
         return [
-            //
+            'name' => $this->faker->name(),
+            
+            #Faker là kiểu dữ liệu giả
         ];
     }
 }

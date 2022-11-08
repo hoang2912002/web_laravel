@@ -80,7 +80,7 @@ class CourseController extends Controller
         // return $arr;
 
         #-----CÁCH 2 DÙNG THƯ VIỆN
-        return DataTables::of($this->model::query())
+        return DataTables::of($this->model::query()->withCount('students'))
             ->editColumn('created_at', function ($object) {
                 return $object->year_created_at;
             })
