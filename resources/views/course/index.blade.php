@@ -40,7 +40,10 @@ và dùng hàm extends()
                         <th>Number Student</th>
                         <th>Create At</th>
                         <td>Edit</td>
-                        <th>Delete</th>
+                        @if (checkSuperAdmin())
+                            <th>Delete</th>
+                        @endif
+                        
                     </tr>
                 </thead>      
             </table>
@@ -133,6 +136,7 @@ và dùng hàm extends()
                             return `<a class="btn btn-primary" href="${data}">Edit</a>`;
                         }
                     },
+                    @if(checkSuperAdmin())
                     { 
                         data: 'destroy',
                         targets: 4,
@@ -144,6 +148,7 @@ và dùng hàm extends()
                             </form>`;
                         }
                     },
+                    @endif
                 ]
             });
 

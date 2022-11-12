@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Course;
 use App\Models\Student;
+use App\Models\User;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -20,5 +22,9 @@ class DatabaseSeeder extends Seeder
         Student::factory(500)->create();
         //sau đó chạy command line php artisan migrate --seed 
         //để vừa chạy DB vừa chạy seed
+        //User::factory(10)->create();
+        $this->call([
+            UserSeeder::class,
+        ]);
     }
 }

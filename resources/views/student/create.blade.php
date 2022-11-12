@@ -41,7 +41,7 @@
                             @endif> 
                             <label class="mr-2"for="">{{$option}}</label>
                         @endforeach
-
+                            
                         <br>
                         <label for=""class="mr-2">Avatar</label>
                         <input type="file" name="avatar" id="">
